@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using System.IO.Compression;
+using HtmlAgilityPack;
 using Microsoft.Win32;
 
 Console.WriteLine("Hi, welcome to Valheim Dedicated Server Mod Sync by @mswietlicki");
@@ -33,9 +34,30 @@ Console.WriteLine($"Reading mods and configs from {serverHostName}");
 var serverUrl = $"http://{serverHostName}:9002/";
 var files = await ListFiles(serverUrl);
 
-foreach (var file in files.Where(f => !f.Contains("plugins/")))
+Console.WriteLine();
+
+//Install
+foreach (var file in files.Where(f => f.Contains("install/")))
+{
+    DownloadFile(serverUrl, file, Path.Combine(valheim, file));
+    if (file.EndsWith(".zip"))
+    {
+        var zipPath = Path.Combine(valheim, file);
+        Console.Write($"Extracting {zipPath} to {valheim}...");
+        ZipFile.ExtractToDirectory(zipPath, valheim, true);
+        Console.WriteLine(" done.");
+    }
+}
+
+Console.WriteLine();
+
+//Config
+foreach (var file in files.Where(f => !f.Contains('/')))
     DownloadFile(serverUrl, file, Path.Combine(valheim, "BepInEx/config/", file));
 
+Console.WriteLine();
+
+//Plugins
 foreach (var file in files.Where(f => f.Contains("plugins/")))
     DownloadFile(serverUrl, file, Path.Combine(valheim, "BepInEx/", file));
 
